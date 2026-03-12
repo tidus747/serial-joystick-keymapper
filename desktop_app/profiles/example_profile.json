@@ -1,0 +1,107 @@
+{
+  "serial_port": "COM5",
+  "baudrate": 230400,
+  "start_minimized": false,
+  "mapping_enabled": false,
+  "profile_name": "example_profile",
+  "buttons": {
+    "btn1": {
+      "mode": "keyboard",
+      "behavior": "hold",
+      "key": "space",
+      "mouse_button": "left"
+    },
+    "btn2": {
+      "mode": "keyboard",
+      "behavior": "press",
+      "key": "e",
+      "mouse_button": "left"
+    },
+    "btn3": {
+      "mode": "mouse_button",
+      "behavior": "hold",
+      "key": "q",
+      "mouse_button": "left"
+    },
+    "btn4": {
+      "mode": "mouse_button",
+      "behavior": "press",
+      "key": "r",
+      "mouse_button": "right"
+    }
+  },
+  "axes": {
+    "stick1_x": {
+      "mode": "digital_axis",
+      "negative_key": "a",
+      "positive_key": "d",
+      "target": "mouse_x",
+      "calibration": {
+        "raw_min": 80,
+        "raw_center": 512,
+        "raw_max": 940,
+        "deadzone": 0.08,
+        "invert": false,
+        "sensitivity": 1.0,
+        "expo": 1.3,
+        "negative_threshold": 0.35,
+        "positive_threshold": 0.35,
+        "hysteresis": 0.08
+      }
+    },
+    "stick1_y": {
+      "mode": "digital_axis",
+      "negative_key": "w",
+      "positive_key": "s",
+      "target": "mouse_y",
+      "calibration": {
+        "raw_min": 70,
+        "raw_center": 507,
+        "raw_max": 942,
+        "deadzone": 0.08,
+        "invert": true,
+        "sensitivity": 1.0,
+        "expo": 1.3,
+        "negative_threshold": 0.35,
+        "positive_threshold": 0.35,
+        "hysteresis": 0.08
+      }
+    },
+    "stick2_x": {
+      "mode": "mouse_axis",
+      "negative_key": "j",
+      "positive_key": "l",
+      "target": "mouse_x",
+      "calibration": {
+        "raw_min": 95,
+        "raw_center": 516,
+        "raw_max": 955,
+        "deadzone": 0.06,
+        "invert": false,
+        "sensitivity": 1.2,
+        "expo": 1.5,
+        "negative_threshold": 0.35,
+        "positive_threshold": 0.35,
+        "hysteresis": 0.08
+      }
+    },
+    "stick2_y": {
+      "mode": "mouse_axis",
+      "negative_key": "i",
+      "positive_key": "k",
+      "target": "mouse_y",
+      "calibration": {
+        "raw_min": 92,
+        "raw_center": 514,
+        "raw_max": 958,
+        "deadzone": 0.06,
+        "invert": true,
+        "sensitivity": 1.2,
+        "expo": 1.5,
+        "negative_threshold": 0.35,
+        "positive_threshold": 0.35,
+        "hysteresis": 0.08
+      }
+    }
+  }
+}
