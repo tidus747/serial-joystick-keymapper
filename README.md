@@ -1,131 +1,130 @@
 # Serial Joystick Keymapper
 
-Arduino Nano firmware and a Windows desktop app to read a custom-wired joystick over serial and map its buttons and analog sticks to keyboard and mouse input.
+Arduino Nano firmware and a Windows desktop application to read a custom-wired joystick over serial and map its buttons and analog sticks to keyboard and mouse input.
+
+![Python](https://img.shields.io/badge/Python-3.11%2B-3776AB?logo=python&logoColor=white)
+![PySide6](https://img.shields.io/badge/PySide6-Desktop-41CD52?logo=qt&logoColor=white)
+![Arduino](https://img.shields.io/badge/Arduino-Nano-00878F?logo=arduino&logoColor=white)
+![Platform](https://img.shields.io/badge/Platform-Windows-0078D4?logo=windows&logoColor=white)
+![License](https://img.shields.io/badge/License-MIT-green)
 
 ## Overview
 
-This project bridges a custom joystick wired to an **Arduino Nano** with a **Windows 11** desktop application.
+This project bridges a custom joystick wired to an **Arduino Nano** with a **Windows desktop application**.
 
 The Arduino reads:
 
 - 4 digital buttons
-- 2 analog sticks (4 analog axes total)
+- 2 analog sticks
+- 4 analog axes in total
 
-It then sends the raw state to the PC over USB serial.
+The desktop application receives the raw state over USB serial and provides:
 
-The Python desktop application provides:
+- live input monitoring
+- per-axis calibration
+- configurable keyboard and mouse mappings
+- JSON-based profiles
+- system tray operation
+- a global mapping enable switch
+- a panic stop to immediately release synthetic inputs
 
-- a live joystick test/calibration interface inspired by the Windows joystick properties panel
-- calibration tools for each axis
-- configurable button and axis mapping
-- keyboard and mouse input emulation
-- JSON-based profiles for different games
-- background operation while minimized to the system tray
-- a panic stop to disable input mapping immediately
+## Architecture
+
+The project deliberately keeps the hardware side simple and moves calibration and mapping logic to the desktop application.
+
+```mermaid
+flowchart LR
+    HW[Buttons and analog sticks] --> FW[Arduino Nano firmware]
+    FW -->|USB serial| SR[Serial reader]
+    SR --> PP[Protocol parser]
+    PP --> CTRL[Application controller]
+
+    CTRL --> UI[PySide6 UI]
+    CTRL --> CAL[Axis calibration]
+    CTRL --> PROF[Profile manager]
+    CTRL --> MAP[Input mapping]
+
+    MAP --> WIN[Win32 SendInput]
+    WIN --> OS[Windows input]
+```
+
+See [docs/architecture.md](docs/architecture.md) for the detailed component view and design decisions.
 
 ## Features
 
 ### Firmware
+
 - Reads 4 digital buttons
 - Reads 4 analog channels
 - Sends joystick state over serial
-- Lightweight and easy to customize
-- Keeps hardware logic simple and pushes calibration/mapping to the desktop app
+- Keeps hardware logic intentionally small
+- Uses a human-readable transport format for easier debugging
 
-### Desktop App
-- Windows-style joystick monitoring interface
-- Live display of:
-  - Button 1-4
-  - Stick 1 X/Y
-  - Stick 2 X/Y
+### Desktop application
+
+- Live button and stick monitoring
+- Serial port and baud-rate configuration
 - Per-axis calibration:
-  - min
+  - minimum
   - center
-  - max
+  - maximum
   - deadzone
-  - invert
+  - inversion
   - sensitivity
-  - curve/expo
-- Mapping modes:
-  - button -> keyboard
-  - button -> mouse click
-  - axis -> keyboard thresholds
-  - axis -> mouse movement
-- JSON profile save/load
-- Run while minimized to tray
-- Global enable/disable mapping
+  - expo
+  - thresholds
+  - hysteresis
+- Button mapping:
+  - keyboard press
+  - keyboard hold
+  - mouse buttons
+- Axis mapping:
+  - digital key thresholds
+  - mouse movement
+- JSON profile save and load
+- Mapping enable and disable control
 - Panic stop
+- Windows input injection through Win32 `SendInput`
 
-## Project Structure
+## Project structure
 
 ```text
 serial-joystick-keymapper/
-├─ README.md
-├─ LICENSE
-├─ .gitignore
-├─ firmware/
-│  └─ nano_serial_joystick/
-│     └─ nano_serial_joystick.ino
-├─ desktop_app/
-│  ├─ pyproject.toml
-│  ├─ requirements.txt
-│  ├─ main.py
-│  ├─ app/
-│  │  ├─ ui/
-│  │  │  ├─ main_window.py
-│  │  │  ├─ widgets/
-│  │  │  │  ├─ stick_widget.py
-│  │  │  │  ├─ button_indicator.py
-│  │  │  │  └─ calibration_panel.py
-│  │  ├─ serial/
-│  │  │  ├─ serial_reader.py
-│  │  │  └─ protocol.py
-│  │  ├─ mapping/
-│  │  │  ├─ actions.py
-│  │  │  ├─ keyboard_mouse.py
-│  │  │  └─ axis_processing.py
-│  │  ├─ profiles/
-│  │  │  ├─ profile_manager.py
-│  │  │  └─ schema.py
-│  │  └─ core/
-│  │     ├─ models.py
-│  │     ├─ state_store.py
-│  │     └─ controller.py
-│  └─ profiles/
-│     └─ example_profile.json
-└─ docs/
-   ├─ protocol.md
-   ├─ calibration.md
-   └─ roadmap.md
+|-- .github/
+|   `-- workflows/
+|       `-- ci.yml
+|-- desktop_app/
+|   |-- app/
+|   |   |-- core/
+|   |   |-- mapping/
+|   |   |-- profiles/
+|   |   |-- serial/
+|   |   `-- ui/
+|   |-- profiles/
+|   |-- tests/
+|   |-- main.py
+|   |-- pyproject.toml
+|   `-- requirements.txt
+|-- docs/
+|   |-- architecture.md
+|   |-- calibration.md
+|   |-- protocol.md
+|   `-- roadmap.md
+|-- firmware/
+|   `-- nano_serial_joystick/
+|       `-- nano_serial_joystick.ino
+|-- CHANGELOG.md
+|-- CONTRIBUTING.md
+|-- LICENSE
+`-- README.md
 ```
 
-## Hardware
+## Serial protocol
 
-### Target Board
-- Arduino Nano
-
-### Suggested Pin Mapping
-
-```cpp
-const uint8_t BTN1_PIN = 2;
-const uint8_t BTN2_PIN = 3;
-const uint8_t BTN3_PIN = 4;
-const uint8_t BTN4_PIN = 5;
-
-const uint8_t STICK1_X_PIN = A0;
-const uint8_t STICK1_Y_PIN = A1;
-const uint8_t STICK2_X_PIN = A2;
-const uint8_t STICK2_Y_PIN = A3;
-```
-
-Adjust these pins to match your wiring.
-
-## Serial Protocol
-
-The firmware sends newline-delimited frames in text format:
+The firmware sends newline-delimited text frames:
 
 ```text
-T,<b1>,<b2>,<b3>,<b4>,<s1x>,<s1y>,<s2x>,<s2y>\n
+T,<b1>,<b2>,<b3>,<b4>,<s1x>,<s1y>,<s2x>,<s2y>
 ```
 
 Example:
@@ -136,63 +135,93 @@ T,0,1,0,0,512,498,1023,14
 
 Where:
 
-- `b1..b4` are button states (`0` or `1`)
-- `s1x, s1y, s2x, s2y` are analog readings (`0..1023`)
+- `b1..b4` are button states
+- `s1x, s1y, s2x, s2y` are raw ADC values
+
+See [docs/protocol.md](docs/protocol.md) for details.
 
 ## Requirements
 
 - Windows 11
-- Python 3.11+
+- Python 3.11 or newer
 - Arduino Nano
+- USB serial connection
 
 ## Installation
 
-### 1. Flash the Arduino firmware
-Upload the sketch in:
+### 1. Flash the firmware
+
+Upload:
 
 ```text
 firmware/nano_serial_joystick/nano_serial_joystick.ino
 ```
 
-### 2. Create a Python virtual environment
+to the Arduino Nano.
 
-```bash
+### 2. Create the Python environment
+
+```powershell
 cd desktop_app
-python -m venv .venv
+py -3.11 -m venv .venv
 .venv\Scripts\activate
+python -m pip install -r requirements.txt
 ```
 
-### 3. Install dependencies
+### 3. Run the application
 
-```bash
-pip install -r requirements.txt
-```
-
-### 4. Run the application
-
-```bash
+```powershell
 python main.py
 ```
 
-## Safety Notes
+## Tests
 
-This application can generate real keyboard and mouse events on the system.
+The repository includes automated tests for the platform-independent logic:
+
+- serial frame parsing
+- axis normalization
+- threshold and hysteresis behavior
+- profile serialization and deserialization
+
+Run them with:
+
+```powershell
+cd desktop_app
+python -m pip install pytest
+$env:PYTHONPATH = "."
+python -m pytest tests -q
+```
+
+GitHub Actions runs the same validation on Windows for pull requests and pushes to `main` and `develop`.
+
+## Safety
+
+This application can generate real keyboard and mouse events.
 
 Recommended safeguards:
 
-- keep the visible global enable/disable toggle in mind
-- use the panic stop in the toolbar or tray menu
-- start with harmless test bindings first
-- avoid binding movement keys or mouse actions until calibration is correct
+- start with mappings disabled
+- calibrate the joystick before enabling input mapping
+- use harmless test bindings first
+- use the panic stop if synthetic input behaves unexpectedly
 
-## Known Limitations
+## Current limitations
 
-- Designed for Windows 11
-- Depends on stable serial communication
-- Not presented as a USB HID joystick device
-- Requires the desktop application to be running for mappings to work
-- Some games may react differently to synthetic keyboard/mouse events depending on anti-cheat or input backend
+- Windows-only desktop input backend
+- Requires the desktop application to be running
+- The Arduino is used as a serial device rather than as a native USB HID joystick
+- Some applications or games may treat synthetic keyboard and mouse events differently
+
+## Roadmap
+
+See [docs/roadmap.md](docs/roadmap.md).
+
+The next improvements are focused on diagnostics, reconnect behavior, packaging and distribution.
+
+## Contributing
+
+Development workflow and contribution guidelines are documented in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 
-This project is released under the MIT License. See the `LICENSE` file for details.
+Released under the MIT License. See [LICENSE](LICENSE).
